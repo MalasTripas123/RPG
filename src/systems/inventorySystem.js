@@ -22,12 +22,38 @@ export function getEquippedActions(state) {
 }
 
 export function getCombatantEquippedActions(combatant) {
+    return [
+        ...getCombatantWeaponActions(combatant),
+        ...getCombatantActiveSpiritActions(combatant)
+    ];
+}
+
+export function getEquippedWeaponActions(state) {
+    return getCombatantWeaponActions(state.player);
+}
+
+export function getEquippedActiveSpiritActions(state) {
+    return getCombatantActiveSpiritActions(state.player);
+}
+
+export function getEquippedPassiveSpirits(state) {
+    return getCombatantPassiveSpirits(state.player);
+}
+
+function getCombatantWeaponActions(combatant) {
     const equipped = combatant.inventory.equipped;
     const actions = [];
 
     if (equipped["equip-weapon"]) {
         actions.push({ slotId: "equip-weapon", item: equipped["equip-weapon"] });
     }
+
+    return actions;
+}
+
+function getCombatantActiveSpiritActions(combatant) {
+    const equipped = combatant.inventory.equipped;
+    const actions = [];
 
     for (let index = 1; index <= 3; index++) {
         const slotId = `equip-spirit-${index}`;
@@ -37,6 +63,22 @@ export function getCombatantEquippedActions(combatant) {
     }
 
     return actions;
+}
+
+function getCombatantPassiveSpirits(combatant) {
+    const equipped = combatant.inventory.equipped;
+    const spirits = [];
+
+    for (let index = 1; index <= 3; index++) {
+        const slotId = `equip-spirit-${index}`;
+        const item = equipped[slotId];
+        const definition = getItemDefinition(item);
+        if (item && definition?.type === "spirit" && definition.hasActive === false) {
+            spirits.push({ slotId, item });
+        }
+    }
+
+    return spirits;
 }
 
 export function getSlotItem(state, slotId) {

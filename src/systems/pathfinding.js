@@ -40,7 +40,7 @@ export function findPath(state, startX, startY, endX, endY, options = {}) {
             if (nextX < 0 || nextX >= COLS || nextY < 0 || nextY >= ROWS || visited.has(key)) continue;
 
             const nextType = state.map[nextY][nextX];
-            if (!canMoveBetween(currentTileType, nextType)) continue;
+            if (!canMoveBetween(currentTileType, nextType, direction)) continue;
 
             const isTarget = nextX === endX && nextY === endY;
             if (isBlockedByEntity(state, nextX, nextY) && !(ignoreTargetBlocker && isTarget)) continue;

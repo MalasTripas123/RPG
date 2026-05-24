@@ -1,4 +1,4 @@
-import { ITEMS_DB } from "./data/items.js";
+import { ITEMS_DB, getRandomSpiritIdsByIdentity } from "./data/items.js";
 import { REST_COST } from "./config.js";
 import { createGameState } from "./state/createGameState.js";
 import { renderCanvas } from "./render/canvasRenderer.js";
@@ -10,6 +10,7 @@ import { hideInventoryTooltip, renderInventory } from "./ui/inventoryPanel.js";
 import { renderMovementPlanPanel } from "./ui/movementPlanPanel.js";
 import { executeSkill, queuePlayerAction, removeQueuedPlayerAction, endPlayerTurn } from "./systems/combatSystem.js";
 import { renderActionQueuePanel } from "./ui/actionQueuePanel.js";
+import { hideStartMenu, renderStartMenu } from "./ui/startMenu.js";
 import { updateDummyCombatState } from "./systems/combatState.js";
 import { addDummy, addEnemy, removeLastDummy, removeLastEnemy } from "./systems/entitySystem.js";
 import { addFloatingText } from "./systems/feedback.js";
@@ -25,9 +26,7 @@ import {
 import { advanceMovement, startMovement, stopMovement, clearPlannedMove } from "./systems/movementSystem.js";
 import { resetPlayerTurn, restoreActionResources } from "./systems/turns.js";
 
-const state = createGameState();
-state.settings ??= {};
-state.settings.invertCameraDrag ??= false;
+let state = null;
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -40,6 +39,8 @@ const testPanel = document.getElementById("test-panel");
 const combatToast = document.getElementById("combat-toast");
 const invertCameraDragToggle = document.getElementById("toggle-invert-camera-drag");
 let combatToastTimeout = null;
+let controlsBound = false;
+let gameLoopStarted = false;
 
 const actionCallbacks = {
     onActionSelected: toggleActionTargeting,
@@ -112,29 +113,61 @@ document.getElementById("btn-open-options").addEventListener("click", openOption
 document.getElementById("btn-close-escape-menu").addEventListener("click", closeGameMenus);
 document.getElementById("btn-back-options").addEventListener("click", openEscapeMenu);
 invertCameraDragToggle.addEventListener("change", () => {
+    if (!state) return;
     state.settings.invertCameraDrag = invertCameraDragToggle.checked;
 });
 
-bindControls(state, canvas, {
-    onMove: startPlayerMovement,
-    onTarget: handleTargetClick,
-    onCancelModes: cancelModes,
-    onEscape: handleEscape,
-    onToggleInventory: toggleInventory,
-    onEndTurn: handleEndTurn,
-    onActionHotkey(index) {
-        const action = getEquippedActions(state)[index];
-        if (!action) return;
-        toggleActionTargeting(action, canUseItem(state, action.item));
-    }
+renderStartMenu({
+    onWeaponSelected: startGame
 });
 
-updateDummyCombatState(state);
-refreshUi();
-if (state.isInCombat) showCombatToast("COMBATE INICIADO", "danger");
-requestAnimationFrame(gameLoop);
+function startGame(weaponId) {
+    const weapon = ITEMS_DB[weaponId];
+    const initialSpiritIds = getRandomSpiritIdsByIdentity(weapon.identity, 3);
+
+    state = createGameState({
+        weaponId,
+        initialSpiritIds,
+        bagItemIds: []
+    });
+    state.settings ??= {};
+    state.settings.invertCameraDrag ??= false;
+
+    hideStartMenu();
+    bindGameControls();
+    updateDummyCombatState(state);
+    refreshUi();
+    showCombatToast(`ARMA: ${weapon.name}`, "neutral", 1600);
+
+    if (!gameLoopStarted) {
+        gameLoopStarted = true;
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+function bindGameControls() {
+    if (controlsBound) return;
+
+    bindControls(state, canvas, {
+        onMove: startPlayerMovement,
+        onTarget: handleTargetClick,
+        onCancelModes: cancelModes,
+        onEscape: handleEscape,
+        onToggleInventory: toggleInventory,
+        onEndTurn: handleEndTurn,
+        onActionHotkey(index) {
+            const action = getEquippedActions(state)[index];
+            if (!action) return;
+            toggleActionTargeting(action, canUseItem(state, action.item));
+        }
+    });
+
+    controlsBound = true;
+}
 
 function refreshUi() {
+    if (!state) return;
+
     gameContainer.classList.toggle("resting", state.mode === "RESTING");
     updateHud(state);
     renderCombatOrderBar(state);

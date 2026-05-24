@@ -26,9 +26,9 @@ export function createInventoryItem(itemId) {
     return item;
 }
 
-export function createGameState() {
-    const playerX = 5;
-    const playerY = 5;
+export function createGameState(loadout = {}) {
+    const playerX = 20;
+    const playerY = 45;
 
     return {
         mode: "IDLE",
@@ -51,13 +51,20 @@ export function createGameState() {
         combatPhase: "EXPLORATION",
         activeActionCombatantId: null,
         round: 1,
-        player: createPlayer(playerX, playerY),
+        player: createPlayer(playerX, playerY, loadout),
         dummies: [createDummy(DUMMY_POSITION.x, DUMMY_POSITION.y)],
         enemies: []
     };
 }
 
-function createPlayer(x, y) {
+function createPlayer(x, y, loadout = {}) {
+    const weaponId = loadout?.weaponId ?? "wep_musket";
+    const initialSpiritIds = loadout?.initialSpiritIds ?? PLAYER_INITIAL_SPIRIT_IDS;
+    const bagItemIds = loadout?.bagItemIds ?? [
+        ...PLAYER_BAG_WEAPON_IDS,
+        ...PLAYER_BAG_SPIRIT_IDS
+    ];
+
     return createCombatant({
         id: "player",
         type: "player",
@@ -79,14 +86,22 @@ function createPlayer(x, y) {
             maxPad: 6
         },
         coins: 0,
-        equipped: {
-            "equip-weapon": createInventoryItem("wep_musket"),
-            "equip-spirit-1": createInventoryItem(PLAYER_INITIAL_SPIRIT_IDS[0]),
-            "equip-spirit-2": createInventoryItem(PLAYER_INITIAL_SPIRIT_IDS[1]),
-            "equip-spirit-3": createInventoryItem(PLAYER_INITIAL_SPIRIT_IDS[2])
-        },
-        bag: createPlayerBag()
+        equipped: createPlayerEquipment(weaponId, initialSpiritIds),
+        bag: createPlayerBag(bagItemIds)
     });
+}
+
+function createPlayerEquipment(weaponId, initialSpiritIds) {
+    const equipped = {
+        "equip-weapon": createInventoryItem(weaponId)
+    };
+
+    for (let index = 0; index < 3; index++) {
+        const spiritId = initialSpiritIds[index];
+        equipped[`equip-spirit-${index + 1}`] = spiritId ? createInventoryItem(spiritId) : null;
+    }
+
+    return equipped;
 }
 
 function createCombatant({ id, type, x, y, color, icon, name, stats, coins = 0, equipped, bag }) {
@@ -121,11 +136,8 @@ function createCombatant({ id, type, x, y, color, icon, name, stats, coins = 0, 
     };
 }
 
-function createPlayerBag() {
-    const items = [
-        ...PLAYER_BAG_WEAPON_IDS,
-        ...PLAYER_BAG_SPIRIT_IDS
-    ].map(createInventoryItem);
+function createPlayerBag(itemIds) {
+    const items = itemIds.map(createInventoryItem);
 
     while (items.length < 44) items.push(null);
     return items;

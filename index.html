@@ -29,6 +29,52 @@
 
             <canvas id="gameCanvas" width="800" height="600"></canvas>
 
+            <div id="start-menu" class="start-menu active" aria-modal="true" role="dialog" aria-labelledby="start-menu-title">
+                <div class="start-menu-panel">
+                    <div class="start-menu-kicker">Nueva partida</div>
+                    <h1 id="start-menu-title">Elige tu arma</h1>
+                    <div id="start-weapon-list" class="start-weapon-list" aria-label="Armas iniciales">
+                        <button class="start-weapon-card" data-weapon-id="wep_hook" data-identity="white" type="button">
+                            <span class="start-weapon-icon">GF</span>
+                            <span class="start-weapon-name">Garfio</span>
+                            <span class="start-weapon-identity">Blanco</span>
+                            <span class="start-weapon-meta">Alcance 1</span>
+                        </button>
+                        <button class="start-weapon-card" data-weapon-id="wep_knife" data-identity="black" type="button">
+                            <span class="start-weapon-icon">CU</span>
+                            <span class="start-weapon-name">Cuchillo</span>
+                            <span class="start-weapon-identity">Negro</span>
+                            <span class="start-weapon-meta">Alcance 1</span>
+                        </button>
+                        <button class="start-weapon-card" data-weapon-id="wep_club" data-identity="red" type="button">
+                            <span class="start-weapon-icon">GA</span>
+                            <span class="start-weapon-name">Garrote</span>
+                            <span class="start-weapon-identity">Rojo</span>
+                            <span class="start-weapon-meta">Alcance 3</span>
+                        </button>
+                        <button class="start-weapon-card" data-weapon-id="wep_whip" data-identity="blue" type="button">
+                            <span class="start-weapon-icon">LA</span>
+                            <span class="start-weapon-name">Latigo</span>
+                            <span class="start-weapon-identity">Azul</span>
+                            <span class="start-weapon-meta">Alcance 4</span>
+                        </button>
+                        <button class="start-weapon-card" data-weapon-id="wep_musket" data-identity="orange" type="button">
+                            <span class="start-weapon-icon">MO</span>
+                            <span class="start-weapon-name">Mosquete</span>
+                            <span class="start-weapon-identity">Naranjo</span>
+                            <span class="start-weapon-meta">Alcance 8</span>
+                        </button>
+                        <button class="start-weapon-card" data-weapon-id="wep_crossbow" data-identity="green" type="button">
+                            <span class="start-weapon-icon">BA</span>
+                            <span class="start-weapon-name">Ballesta</span>
+                            <span class="start-weapon-identity">Verde</span>
+                            <span class="start-weapon-meta">Alcance 7</span>
+                        </button>
+                    </div>
+                    <div class="start-menu-note">Recibirás 3 espíritus afines al azar.</div>
+                </div>
+            </div>
+
             <aside id="test-panel" class="test-panel collapsed" aria-label="Panel de pruebas">
                 <button id="btn-toggle-test-panel" class="test-panel-toggle" type="button" aria-label="Abrir panel de pruebas">⚙</button>
                 <div class="test-panel-body">
@@ -164,6 +210,6 @@
         </section>
     </main>
 
-    <script type="module" src="./src/app.js?v=camera-drag-6"></script>
+    <script type="module" src="./src/app.js?v=passive-action-bar-1"></script>
 </body>
 </html>

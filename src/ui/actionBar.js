@@ -3,7 +3,9 @@ import { ITEMS_DB } from "../data/items.js";
 import { REST_COST } from "../config.js";
 import {
     canUseItem,
-    getEquippedActions,
+    getEquippedActiveSpiritActions,
+    getEquippedPassiveSpirits,
+    getEquippedWeaponActions,
     getItemDefinition,
     getItemDurabilityLabel,
     getPlayerActionResourceCost
@@ -32,9 +34,17 @@ export function renderActionBar(state, callbacks) {
         onClick: callbacks.onEndTurn
     }));
 
-    getEquippedActions(state).forEach(action => {
-        bar.appendChild(createActionButton(state, action, callbacks));
-    });
+    bar.appendChild(createActionGroup("Ataque basico", getEquippedWeaponActions(state), action => (
+        createActionButton(state, action, callbacks)
+    )));
+
+    bar.appendChild(createActionGroup("Activas", getEquippedActiveSpiritActions(state), action => (
+        createActionButton(state, action, callbacks)
+    )));
+
+    bar.appendChild(createActionGroup("Pasivas", getEquippedPassiveSpirits(state), action => (
+        createPassiveSpiritButton(state, action)
+    )));
 
     bar.appendChild(createUtilityButton({
         className: "inventory-toggle-btn",
@@ -44,6 +54,19 @@ export function renderActionBar(state, callbacks) {
         disabled: state.mode === "RESTING",
         onClick: callbacks.onToggleInventory
     }));
+}
+
+function createActionGroup(label, actions, createButton) {
+    const group = document.createElement("div");
+    group.className = "action-group";
+    group.dataset.groupLabel = label;
+
+    actions.forEach(action => {
+        group.appendChild(createButton(action));
+    });
+
+    if (actions.length === 0) group.classList.add("empty");
+    return group;
 }
 
 function getRestTooltip(state) {
@@ -96,6 +119,27 @@ function createActionButton(state, action, callbacks) {
     button.addEventListener("click", () => callbacks.onActionSelected(action, usable));
     button.addEventListener("mouseenter", () => callbacks.onActionPreview(action, usable));
     button.addEventListener("mouseleave", callbacks.onActionPreviewClear);
+    return button;
+}
+
+function createPassiveSpiritButton(state, action) {
+    const definition = getItemDefinition(action.item);
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "action-btn passive-spirit-btn";
+    button.dataset.tooltip = getTooltip(state, action.item);
+    button.setAttribute("aria-label", `${definition.name} (pasiva)`);
+    applyIdentityStyle(button, definition);
+
+    if (action.item.broken) button.classList.add("disabled");
+
+    button.innerHTML = [
+        `<span class="action-icon">${definition.icon}</span>`,
+        `<div class="action-cost passive-marker">PAS</div>`,
+        `<div class="action-uses">${getItemDurabilityLabel(action.item)}</div>`
+    ].join("");
+
     return button;
 }
 

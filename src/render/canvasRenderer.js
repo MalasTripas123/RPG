@@ -1,6 +1,5 @@
-import { COLS, ROWS, TILE_SIZE } from "../config.js";
+import { COLS, ROWS, TILE_SIZE, TILE_TYPES } from "../config.js";
 import { ITEMS_DB } from "../data/items.js";
-import { getHeightOffset } from "../data/world.js";
 import { getEntities } from "../systems/entitySystem.js";
 import { findPath } from "../systems/pathfinding.js";
 import { calculateAreaTiles, isTileInRange } from "../systems/targeting.js";
@@ -37,47 +36,81 @@ function drawMap(state, canvas, ctx) {
 }
 
 function drawTile(ctx, type, px, py) {
-    if (type === 1) {
-        ctx.fillStyle = "#222";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-    } else if (type === 0) {
-        ctx.fillStyle = "#2c3e50";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-    } else if (type === 2) {
-        ctx.fillStyle = "#34495e";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        ctx.fillRect(px, py, TILE_SIZE, 3);
-        ctx.fillRect(px, py, 3, TILE_SIZE);
-    } else if (type === 5) {
-        ctx.fillStyle = "#455a64";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "rgba(255,255,255,0.15)";
-        ctx.fillRect(px, py, TILE_SIZE, 3);
-        ctx.fillRect(px, py, 3, TILE_SIZE);
-    } else if (type === 3 || type === 6) {
-        ctx.fillStyle = "#1a252f";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = "#111";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(px + 12, py);
-        ctx.lineTo(px + 12, py + TILE_SIZE);
-        ctx.moveTo(px + 38, py);
-        ctx.lineTo(px + 38, py + TILE_SIZE);
-        ctx.stroke();
-    } else if (type === 4 || type === 7) {
-        ctx.fillStyle = "#3e2723";
-        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = "#5d4037";
-        ctx.fillRect(px + 6, py + 6, TILE_SIZE - 12, 10);
-        ctx.fillRect(px + 6, py + 20, TILE_SIZE - 12, 10);
-        ctx.fillRect(px + 6, py + 34, TILE_SIZE - 12, 10);
+    if (type === TILE_TYPES.WATER) {
+        drawWaterTile(ctx, px, py);
+    } else if (type === TILE_TYPES.GROUND) {
+        drawHeightTile(ctx, px, py, "#2c3e50", 0.04);
+    } else if (type === TILE_TYPES.HEIGHT_1) {
+        drawHeightTile(ctx, px, py, "#34495e", 0.08);
+    } else if (type === TILE_TYPES.HEIGHT_2) {
+        drawHeightTile(ctx, px, py, "#455a64", 0.12);
+    } else if (type === TILE_TYPES.HEIGHT_3) {
+        drawHeightTile(ctx, px, py, "#546e7a", 0.16);
+    } else if (type === TILE_TYPES.WALL) {
+        drawWallTile(ctx, px, py);
+    } else if (type === TILE_TYPES.RAMP) {
+        drawRampTile(ctx, px, py);
     }
 
     ctx.strokeStyle = "rgba(0,0,0,0.3)";
     ctx.lineWidth = 1;
     ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
+}
+
+function drawHeightTile(ctx, px, py, color, highlightAlpha) {
+    ctx.fillStyle = color;
+    ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+    ctx.fillStyle = `rgba(255,255,255,${highlightAlpha})`;
+    ctx.fillRect(px, py, TILE_SIZE, 3);
+    ctx.fillRect(px, py, 3, TILE_SIZE);
+    ctx.fillStyle = "rgba(0,0,0,0.14)";
+    ctx.fillRect(px, py + TILE_SIZE - 3, TILE_SIZE, 3);
+    ctx.fillRect(px + TILE_SIZE - 3, py, 3, TILE_SIZE);
+}
+
+function drawWaterTile(ctx, px, py) {
+    ctx.fillStyle = "#0b2233";
+    ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+    ctx.strokeStyle = "rgba(74, 144, 178, 0.22)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 7, py + 18);
+    ctx.quadraticCurveTo(px + 16, py + 12, px + 25, py + 18);
+    ctx.quadraticCurveTo(px + 34, py + 24, px + 43, py + 18);
+    ctx.moveTo(px + 5, py + 34);
+    ctx.quadraticCurveTo(px + 15, py + 28, px + 25, py + 34);
+    ctx.quadraticCurveTo(px + 35, py + 40, px + 45, py + 34);
+    ctx.stroke();
+}
+
+function drawWallTile(ctx, px, py) {
+    ctx.fillStyle = "#111820";
+    ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+    ctx.strokeStyle = "#05080c";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + 13, py);
+    ctx.lineTo(px + 13, py + TILE_SIZE);
+    ctx.moveTo(px + 36, py);
+    ctx.lineTo(px + 36, py + TILE_SIZE);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillRect(px, py, TILE_SIZE, 2);
+}
+
+function drawRampTile(ctx, px, py) {
+    ctx.fillStyle = "#3c4d56";
+    ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+    ctx.strokeStyle = "#8d6e63";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(px + 6, py + 39);
+    ctx.lineTo(px + 39, py + 6);
+    ctx.moveTo(px + 13, py + 45);
+    ctx.lineTo(px + 45, py + 13);
+    ctx.moveTo(px + 5, py + 27);
+    ctx.lineTo(px + 27, py + 5);
+    ctx.stroke();
 }
 
 function drawOverlays(state, ctx) {
@@ -165,8 +198,7 @@ function drawEntities(state, ctx) {
 }
 
 function drawEntity(state, ctx, entity) {
-    const offset = getHeightOffset(state.map[entity.gridY][entity.gridX]);
-    const drawY = entity.pixelY - offset;
+    const drawY = entity.pixelY;
 
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.beginPath();
@@ -201,8 +233,7 @@ function drawEntity(state, ctx, entity) {
 
 function drawPlayer(state, ctx) {
     const player = state.player;
-    const offset = getHeightOffset(state.map[player.gridY][player.gridX]);
-    const drawY = player.pixelY - offset;
+    const drawY = player.pixelY;
 
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.beginPath();

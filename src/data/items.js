@@ -106,6 +106,8 @@ const WEAPONS = Object.freeze({
     })
 });
 
+export const WEAPON_IDS = Object.freeze(Object.keys(WEAPONS));
+
 const SPIRITS = Object.freeze({
     spi_black_mark: spirit({
         id: "spi_black_mark",
@@ -886,6 +888,21 @@ const SPIRITS = Object.freeze({
 });
 
 export const SPIRIT_IDS = Object.freeze(Object.keys(SPIRITS));
+
+export function getSpiritIdsByIdentity(identity) {
+    return SPIRIT_IDS.filter(id => SPIRITS[id].identity === identity);
+}
+
+export function getRandomSpiritIdsByIdentity(identity, count = 3) {
+    const ids = [...getSpiritIdsByIdentity(identity)];
+
+    for (let index = ids.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [ids[index], ids[swapIndex]] = [ids[swapIndex], ids[index]];
+    }
+
+    return ids.slice(0, count);
+}
 
 export const PLAYER_INITIAL_SPIRIT_IDS = Object.freeze([
     "spi_orange_shot",
