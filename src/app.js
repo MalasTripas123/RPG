@@ -25,6 +25,7 @@ import {
 } from "./systems/inventorySystem.js";
 import { advanceMovement, startMovement, stopMovement, clearPlannedMove } from "./systems/movementSystem.js";
 import { resetPlayerTurn, restoreActionResources } from "./systems/turns.js";
+import { increaseCombatantStat } from "./systems/progressionSystem.js";
 
 let state = null;
 
@@ -88,6 +89,7 @@ function getInventoryMoveError(reason) {
     if (reason === "OPPOSITE_IDENTITY") return "Identidad opuesta";
     if (reason === "LOCKED_QUEUED_SPIRIT") return "Espíritu en cola";
     if (reason === "SPIRIT_WALK_PHASE") return "Fase Acción";
+    if (reason === "LOCKED_SLOT") return "Ranura bloqueada";
     return "No encaja";
 }
 
@@ -112,6 +114,9 @@ document.getElementById("btn-skip-actions").addEventListener("click", toggleActi
 document.getElementById("btn-open-options").addEventListener("click", openOptionsMenu);
 document.getElementById("btn-close-escape-menu").addEventListener("click", closeGameMenus);
 document.getElementById("btn-back-options").addEventListener("click", openEscapeMenu);
+document.querySelectorAll("[data-stat-increase]").forEach(button => {
+    button.addEventListener("click", () => increasePlayerStat(button.dataset.statIncrease));
+});
 invertCameraDragToggle.addEventListener("change", () => {
     if (!state) return;
     state.settings.invertCameraDrag = invertCameraDragToggle.checked;
@@ -474,6 +479,26 @@ function closeInventory() {
     hideInventoryTooltip();
     inventoryModal.classList.remove("active");
     if (state.mode === "MENU") state.mode = "IDLE";
+    refreshUi();
+}
+
+function increasePlayerStat(stat) {
+    if (!state || isInteractionLocked()) return;
+
+    const result = increaseCombatantStat(state.player, stat);
+    if (!result.ok) {
+        addFloatingText(state, "Sin puntos", state.player.gridX, state.player.gridY, "#aaa", -20);
+        return;
+    }
+
+    addFloatingText(
+        state,
+        `+1 ${result.label}`,
+        state.player.gridX,
+        state.player.gridY,
+        "#2ecc71",
+        -20
+    );
     refreshUi();
 }
 

@@ -1,4 +1,6 @@
 import { getEffectiveStat } from "../systems/itemRules.js";
+import { getCombatantMoveStepBudget } from "../systems/movementSystem.js";
+import { MAX_SPIRIT_SLOTS, getCriticalChanceFromLuck } from "../systems/progressionSystem.js";
 import { getEffectiveSpeed } from "../systems/turns.js";
 
 export function updateHud(state) {
@@ -23,12 +25,16 @@ export function updateHud(state) {
     setText("stat-str", getEffectiveStat(player, "str"));
     setText("stat-dex", getEffectiveStat(player, "dex"));
     setText("stat-int", getEffectiveStat(player, "int"));
-    setText("stat-vit", stats.vit);
+    setText("stat-vit", getEffectiveStat(player, "vit"));
+    setText("stat-luck", getEffectiveStat(player, "luck"));
+    setText("stat-crit", `${getCriticalChanceFromLuck(getEffectiveStat(player, "luck"))}%`);
+    setText("stat-spirit-slots", `${stats.maxSpiritSlots}/${MAX_SPIRIT_SLOTS}`);
+    setText("stat-points", stats.statPoints);
     setText("stat-current-paf", formatResource(player.paf));
     setText("stat-current-pad", formatResource(player.pad));
     setText("stat-paf", formatResource(stats.maxPaf));
     setText("stat-pad", formatResource(stats.maxPad));
-    setText("stat-movement", formatResource(stats.maxPad / 2));
+    setText("stat-movement", formatResource(getCombatantMoveStepBudget({ ...player, pad: stats.maxPad })));
     setText("stat-coins", player.coins);
 
     const xpBar = document.getElementById("xp-bar");
@@ -42,6 +48,17 @@ export function updateHud(state) {
 
     const roundBox = document.getElementById("hud-round-box");
     if (roundBox) roundBox.style.display = state.isInCombat ? "block" : "none";
+
+    updateStatButtons(stats.statPoints);
+}
+
+function updateStatButtons(statPoints) {
+    const hasPoints = (statPoints ?? 0) > 0;
+
+    document.querySelectorAll("[data-stat-increase]").forEach(button => {
+        button.disabled = !hasPoints;
+        button.classList.toggle("hidden", !hasPoints);
+    });
 }
 
 function setText(id, value) {
@@ -50,7 +67,7 @@ function setText(id, value) {
 }
 
 function formatResource(value) {
-    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+    return Number.isInteger(value) ? String(value) : Number(value.toFixed(3)).toString();
 }
 
 function getCombatPhaseLabel(phase) {

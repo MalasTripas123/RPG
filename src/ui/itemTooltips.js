@@ -103,5 +103,7 @@ function getShortStatLabel(stat) {
     if (stat === "str") return "Fue";
     if (stat === "dex") return "Des";
     if (stat === "speed") return "Vel";
+    if (stat === "vit") return "Vit";
+    if (stat === "luck") return "Sue";
     return "Int";
 }

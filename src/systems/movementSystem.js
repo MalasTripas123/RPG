@@ -25,7 +25,7 @@ export function getCombatantMoveStepBudget(combatant) {
 }
 
 export function getCombatantTilePadCost(combatant) {
-    return PAD_COST_PER_TILE * getMovementPadCostMultiplier(combatant);
+    return PAD_COST_PER_TILE * getSpeedTileCostMultiplier(combatant) * getMovementPadCostMultiplier(combatant);
 }
 
 export function startMovement(state, x, y) {
@@ -136,4 +136,12 @@ export function clearPlannedMove(state) {
 
 export function getPlannedMoveCost(state) {
     return (state.player.plannedMove?.path?.length ?? 0) * getCombatantTilePadCost(state.player);
+}
+
+function getSpeedTileCostMultiplier(combatant) {
+    const speed = Math.max(0, getEffectiveSpeed(combatant));
+    if (speed < 20) return 1;
+
+    const speedTier = Math.floor(Math.log2(speed / 20)) + 1;
+    return 1 / (2 ** speedTier);
 }

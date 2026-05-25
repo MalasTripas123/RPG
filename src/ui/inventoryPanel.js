@@ -4,6 +4,7 @@ import {
     getSlotItem,
     canPlaceItemInSlot,
     isItemLockedByQueuedSpirit,
+    isLockedSpiritEquipmentSlot,
     isSlotLockedByQueuedSpirit,
     isSpiritLockedByWalkPhase
 } from "../systems/inventorySystem.js";
@@ -18,15 +19,17 @@ export function renderInventory(state, callbacks) {
         if (!slot) return;
 
         const item = getSlotItem(state, slotId);
+        const isLevelLocked = isLockedSpiritEquipmentSlot(state, slotId);
         const isActionLocked = isSlotLockedByQueuedSpirit(state, slotId) || isItemLockedByQueuedSpirit(state, item);
         const isPhaseLocked = isSpiritLockedByWalkPhase(state, slotId, item);
 
         slot.innerHTML = "";
+        slot.classList.toggle("locked", isLevelLocked);
         slot.classList.toggle("action-locked", isActionLocked);
         slot.classList.toggle("phase-locked", isPhaseLocked);
         wireDropSlot(state, slot, callbacks);
 
-        if (item) slot.appendChild(createItemElement(state, item, slotId, itemIndex++));
+        if (item && !isLevelLocked) slot.appendChild(createItemElement(state, item, slotId, itemIndex++));
     });
 
     const bagGrid = document.getElementById("bag-grid");
@@ -198,6 +201,7 @@ function wireDropSlot(state, slot, callbacks) {
 }
 
 function canDropItemInSlot(state, item, slotId) {
+    if (isLockedSpiritEquipmentSlot(state, slotId)) return false;
     if (!canPlaceItemInSlot(item, slotId)) return false;
     if (!slotId.startsWith("equip-spirit")) return true;
     return canEquipSpiritForCombatant(state.player, item);

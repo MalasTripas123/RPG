@@ -26,5 +26,5 @@ export function renderMovementPlanPanel(state, callbacks) {
 }
 
 function formatPad(value) {
-    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+    return Number.isInteger(value) ? String(value) : Number(value.toFixed(3)).toString();
 }

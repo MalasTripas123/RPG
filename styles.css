@@ -68,6 +68,8 @@ button {
 .stat-speed { color: #2ecc71; }
 .stat-movement { color: #9fc9ef; }
 .stat-vitality { color: #e67e22; }
+.stat-luck { color: #d7a8ff; }
+.stat-critical { color: #ff6b6b; }
 .stat-round { color: #ffb86c; }
 
 #training-indicator {
@@ -1122,6 +1124,57 @@ h3 {
 .stat-val {
     color: #fff;
     font-weight: 700;
+}
+
+.stat-points-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 8px;
+    color: #d7a8ff;
+    background: rgba(155, 89, 182, 0.14);
+    border: 1px solid rgba(155, 89, 182, 0.45);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.stat-with-button {
+    align-items: center;
+}
+
+.stat-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-up-btn {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
+    color: #111;
+    background: #f1c40f;
+    border: 1px solid #ffda66;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-up-btn:hover {
+    filter: brightness(1.12);
+}
+
+.stat-up-btn.hidden {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .wallet-panel {

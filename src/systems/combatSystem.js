@@ -8,6 +8,7 @@ import {
     getActionResourceCost,
     getActionValue,
     getCurrentDurability,
+    getEffectiveStat,
     getPersistentDamageAdd,
     getPersistentDamageMultiplier,
     hasResources,
@@ -23,6 +24,11 @@ import {
     triggerEquippedSpiritPassives,
     triggerSpiritPassives
 } from "./spiritSystem.js";
+import {
+    getCriticalChanceFromLuck,
+    getEnemyXpReward,
+    grantExperience
+} from "./progressionSystem.js";
 import { getEffectiveSpeed, resetCombatantResources, resetPlayerTurn } from "./turns.js";
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -486,8 +492,14 @@ function applyDamageAction(state, actor, action, amount) {
     tiles.forEach(({ x, y }) => {
         if (actor.type === "enemy") {
             if (state.player.gridX !== x || state.player.gridY !== y) return;
-            state.player.currentHp = Math.max(0, state.player.currentHp - amount);
-            addFloatingText(state, `-${amount}`, x, y, "#e74c3c");
+            const outcome = resolveDamageOutcome(actor, state.player, amount);
+            if (!outcome.hit) {
+                addFloatingText(state, "Fallo", x, y, "#aaa");
+                return;
+            }
+
+            state.player.currentHp = Math.max(0, state.player.currentHp - outcome.amount);
+            addFloatingText(state, getDamageLabel(outcome), x, y, "#e74c3c");
             applyActionStatus(state, state.player, skill, x, y);
             hits++;
             return;
@@ -496,28 +508,83 @@ function applyDamageAction(state, actor, action, amount) {
         const target = getEntityAt(state, x, y);
         if (!target) return;
 
-        addFloatingText(state, `-${amount}`, x, y, "#e74c3c");
-        hits++;
-
         if (target.type === "dummy") {
+            const outcome = resolveDamageOutcome(actor, null, amount);
+            addFloatingText(state, getDamageLabel(outcome), x, y, "#e74c3c");
             addFloatingText(state, "HP infinito", x, y, "#ffb86c", -24);
+            hits++;
             return;
         }
 
+        const outcome = resolveDamageOutcome(actor, target, amount);
+        if (!outcome.hit) {
+            addFloatingText(state, "Fallo", x, y, "#aaa");
+            return;
+        }
+
+        addFloatingText(state, getDamageLabel(outcome), x, y, "#e74c3c");
+        hits++;
+
         applyActionStatus(state, target, skill, x, y);
-        target.currentHp -= amount;
+        target.currentHp -= outcome.amount;
         if (target.currentHp <= 0) {
             addFloatingText(state, "Derrotado", x, y, "#9b59b6", -24);
             if (removeEntity(state, target) && target.type === "enemy") {
                 const reward = getEnemyCoinReward();
+                const xpReward = getEnemyXpReward(target);
+                const xpResult = grantExperience(state.player, xpReward);
                 state.player.coins += reward;
                 addFloatingText(state, `+${reward} monedas`, x, y, "#f1c40f", -42);
+                addFloatingText(state, `+${xpReward} XP`, x, y, "#9b59b6", -60);
+                if (xpResult.levelsGained > 0) {
+                    addFloatingText(state, `Nivel ${xpResult.level}`, state.player.gridX, state.player.gridY, "#f1c40f", -30);
+                }
             }
         }
     });
 
     if (hits === 0) addFloatingText(state, "Fallo", center.x, center.y, "#aaa");
     return { hits };
+}
+
+function resolveDamageOutcome(actor, target, amount) {
+    const critical = rollCritical(actor);
+    if (critical) {
+        return { hit: true, amount: amount * 2, critical: true };
+    }
+
+    if (target && !rollHit(actor, target)) {
+        return { hit: false, amount: 0, critical: false };
+    }
+
+    return {
+        hit: true,
+        amount,
+        critical: false
+    };
+}
+
+function rollHit(actor, target) {
+    if (!actor?.stats || !target?.stats) return true;
+
+    const attackerDex = Math.max(1, Math.floor(getEffectiveStat(actor, "dex")));
+    const defenderDex = Math.max(1, Math.floor(getEffectiveStat(target, "dex")));
+    const threshold = defenderDex / 2;
+    const rollMax = defenderDex > attackerDex * 2
+        ? Math.floor(threshold) + 1
+        : attackerDex;
+    const roll = randomInt(1, Math.max(1, rollMax));
+
+    return roll > threshold;
+}
+
+function rollCritical(actor) {
+    if (!actor?.stats) return false;
+    return Math.random() * 100 < getCriticalChanceFromLuck(getEffectiveStat(actor, "luck"));
+}
+
+function getDamageLabel(outcome) {
+    return outcome.critical ? `-${outcome.amount} CRIT` : `-${outcome.amount}`;
 }
 
 function applyActionStatus(state, target, skill, x, y) {
@@ -815,6 +882,10 @@ function advanceCombatantStep(combatant) {
 
 function manhattan(x1, y1, x2, y2) {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+}
+
+function randomInt(min, max) {
+    return min + Math.floor(Math.random() * (max - min + 1));
 }
 
 function getEnemyCoinReward() {

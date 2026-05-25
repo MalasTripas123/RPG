@@ -12,6 +12,11 @@ import {
     consumePersistentSpiritDurability,
     triggerSpiritPassives
 } from "./spiritSystem.js";
+import {
+    MAX_SPIRIT_SLOTS,
+    getSpiritSlotNumber,
+    isSpiritSlotUnlocked
+} from "./progressionSystem.js";
 
 export function getItemDefinition(item) {
     return item ? ITEMS_DB[item.itemId] : null;
@@ -55,7 +60,7 @@ function getCombatantActiveSpiritActions(combatant) {
     const equipped = combatant.inventory.equipped;
     const actions = [];
 
-    for (let index = 1; index <= 3; index++) {
+    for (let index = 1; index <= getEquippedSpiritSlotLimit(combatant); index++) {
         const slotId = `equip-spirit-${index}`;
         const item = equipped[slotId];
         const definition = getItemDefinition(item);
@@ -69,7 +74,7 @@ function getCombatantPassiveSpirits(combatant) {
     const equipped = combatant.inventory.equipped;
     const spirits = [];
 
-    for (let index = 1; index <= 3; index++) {
+    for (let index = 1; index <= getEquippedSpiritSlotLimit(combatant); index++) {
         const slotId = `equip-spirit-${index}`;
         const item = equipped[slotId];
         const definition = getItemDefinition(item);
@@ -118,6 +123,9 @@ export function moveItem(state, sourceSlotId, targetSlotId) {
     }
     if (touchesQueuedSpiritAction(state, sourceSlotId, targetSlotId, sourceItem, targetItem)) {
         return { moved: false, reason: "LOCKED_QUEUED_SPIRIT" };
+    }
+    if (isLockedSpiritEquipmentSlot(state, sourceSlotId) || isLockedSpiritEquipmentSlot(state, targetSlotId)) {
+        return { moved: false, reason: "LOCKED_SLOT" };
     }
     if (!canPlaceItemInSlot(sourceItem, targetSlotId)) return { moved: false, reason: "INVALID_TARGET" };
     if (!canPlaceItemInSlot(targetItem, sourceSlotId)) return { moved: false, reason: "INVALID_SWAP" };
@@ -318,4 +326,13 @@ function isSpiritSlot(slotId) {
 
 function isSpiritItem(item) {
     return getItemDefinition(item)?.type === "spirit";
+}
+
+export function isLockedSpiritEquipmentSlot(state, slotId) {
+    if (!getSpiritSlotNumber(slotId)) return false;
+    return !isSpiritSlotUnlocked(state.player.stats, slotId);
+}
+
+function getEquippedSpiritSlotLimit(combatant) {
+    return Math.min(MAX_SPIRIT_SLOTS, combatant.stats?.maxSpiritSlots ?? MAX_SPIRIT_SLOTS);
 }

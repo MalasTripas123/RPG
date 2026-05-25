@@ -6,9 +6,15 @@ import {
     PLAYER_INITIAL_SPIRIT_IDS
 } from "../data/items.js";
 import { createMap } from "../data/world.js";
+import {
+    MAX_SPIRIT_SLOTS,
+    MVP_START_LEVEL,
+    createStatsForLevel
+} from "../systems/progressionSystem.js";
 
 let itemSequence = 1;
 let entitySequence = 1;
+let enemyLevelSequence = 0;
 
 export function createInventoryItem(itemId) {
     const definition = ITEMS_DB[itemId];
@@ -29,6 +35,7 @@ export function createInventoryItem(itemId) {
 export function createGameState(loadout = {}) {
     const playerX = 20;
     const playerY = 45;
+    enemyLevelSequence = 0;
 
     return {
         mode: "IDLE",
@@ -73,18 +80,7 @@ function createPlayer(x, y, loadout = {}) {
         color: "#3498db",
         icon: "🧙",
         name: "Héroe",
-        stats: {
-            level: 3,
-            xp: 0,
-            nextXp: 100,
-            vit: 10,
-            str: 14,
-            int: 10,
-            dex: 12,
-            speed: 6,
-            maxPaf: 3,
-            maxPad: 6
-        },
+        stats: createStatsForLevel(MVP_START_LEVEL),
         coins: 0,
         equipped: createPlayerEquipment(weaponId, initialSpiritIds),
         bag: createPlayerBag(bagItemIds)
@@ -96,7 +92,7 @@ function createPlayerEquipment(weaponId, initialSpiritIds) {
         "equip-weapon": createInventoryItem(weaponId)
     };
 
-    for (let index = 0; index < 3; index++) {
+    for (let index = 0; index < MAX_SPIRIT_SLOTS; index++) {
         const spiritId = initialSpiritIds[index];
         equipped[`equip-spirit-${index + 1}`] = spiritId ? createInventoryItem(spiritId) : null;
     }
@@ -158,6 +154,8 @@ export function createDummy(x, y) {
 }
 
 export function createEnemy(x, y) {
+    const level = getNextEnemyLevel();
+
     return createCombatant({
         id: `enemy-${entitySequence++}`,
         type: "enemy",
@@ -165,17 +163,8 @@ export function createEnemy(x, y) {
         y,
         color: "#c0392b",
         icon: "⚔️",
-        name: "Soldado de prueba",
-        stats: {
-            level: 1,
-            vit: 14,
-            str: 8,
-            int: 6,
-            dex: 8,
-            speed: 4,
-            maxPaf: 1,
-            maxPad: 4
-        },
+        name: `Soldado Nv.${level}`,
+        stats: createStatsForLevel(level, { statPoints: 0 }),
         equipped: {
             "equip-weapon": createInventoryItem("wep_hook")
         },
@@ -184,8 +173,11 @@ export function createEnemy(x, y) {
 }
 
 function normalizeStats(stats) {
-    return {
-        ...stats,
-        maxHp: stats.vit ? stats.vit * 5 : stats.maxHp
-    };
+    return createStatsForLevel(stats.level ?? 1, stats);
+}
+
+function getNextEnemyLevel() {
+    const level = (enemyLevelSequence % 5) + 1;
+    enemyLevelSequence++;
+    return level;
 }

@@ -127,23 +127,27 @@
                         </div>
 
                         <div class="panel-section">
-                            <h3>Recursos</h3>
+                            <h3>Atributos</h3>
                             <div class="stats-grid">
                                 <div class="stat-item"><span class="stat-label">Vida</span> <span class="stat-val stat-hp"><span id="stat-hp">50</span>/<span id="stat-maxhp">50</span></span></div>
                                 <div class="stat-item"><span class="stat-label">PAF</span> <span class="stat-val stat-paf"><span id="stat-current-paf">3</span>/<span id="stat-paf">3</span></span></div>
                                 <div class="stat-item"><span class="stat-label">PAD</span> <span class="stat-val stat-pad"><span id="stat-current-pad">6</span>/<span id="stat-pad">6</span></span></div>
                                 <div class="stat-item"><span class="stat-label">Movimiento</span> <span class="stat-val stat-movement" id="stat-movement">3</span></div>
+                                <div class="stat-item"><span class="stat-label">Critico</span> <span class="stat-val stat-critical" id="stat-crit">10%</span></div>
+                                <div class="stat-item"><span class="stat-label">Espiritus</span> <span class="stat-val" id="stat-spirit-slots">3/6</span></div>
                             </div>
                         </div>
 
                         <div class="panel-section">
-                            <h3>Atributos</h3>
+                            <h3>Estadisticas</h3>
+                            <div class="stat-points-info">Puntos disponibles <strong id="stat-points">0</strong></div>
                             <div class="stats-grid">
-                                <div class="stat-item"><span class="stat-label">Fuerza</span> <span class="stat-val" id="stat-str">14</span></div>
-                                <div class="stat-item"><span class="stat-label">Velocidad</span> <span class="stat-val stat-speed" id="stat-speed">6</span></div>
-                                <div class="stat-item"><span class="stat-label">Inteligencia</span> <span class="stat-val" id="stat-int">10</span></div>
-                                <div class="stat-item"><span class="stat-label">Destreza</span> <span class="stat-val" id="stat-dex">12</span></div>
-                                <div class="stat-item"><span class="stat-label">Vitalidad</span> <span class="stat-val stat-vitality" id="stat-vit">10</span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Fuerza</span> <span class="stat-control"><span class="stat-val" id="stat-str">10</span><button class="stat-up-btn" type="button" data-stat-increase="str" aria-label="Subir Fuerza">+</button></span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Inteligencia</span> <span class="stat-control"><span class="stat-val" id="stat-int">10</span><button class="stat-up-btn" type="button" data-stat-increase="int" aria-label="Subir Inteligencia">+</button></span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Vitalidad</span> <span class="stat-control"><span class="stat-val stat-vitality" id="stat-vit">10</span><button class="stat-up-btn" type="button" data-stat-increase="vit" aria-label="Subir Vitalidad">+</button></span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Velocidad</span> <span class="stat-control"><span class="stat-val stat-speed" id="stat-speed">10</span><button class="stat-up-btn" type="button" data-stat-increase="speed" aria-label="Subir Velocidad">+</button></span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Destreza</span> <span class="stat-control"><span class="stat-val" id="stat-dex">10</span><button class="stat-up-btn" type="button" data-stat-increase="dex" aria-label="Subir Destreza">+</button></span></div>
+                                <div class="stat-item stat-with-button"><span class="stat-label">Suerte</span> <span class="stat-control"><span class="stat-val stat-luck" id="stat-luck">10</span><button class="stat-up-btn" type="button" data-stat-increase="luck" aria-label="Subir Suerte">+</button></span></div>
                             </div>
                         </div>
 
@@ -210,6 +214,6 @@
         </section>
     </main>
 
-    <script type="module" src="./src/app.js?v=passive-action-bar-1"></script>
+    <script type="module" src="./src/app.js?v=level-stats-1"></script>
 </body>
 </html>
